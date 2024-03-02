@@ -3,7 +3,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::fmt;
 use std::fs::{File, OpenOptions};
-use std::path::PathBuf,
+use std::path::PathBuf;
 use std::io::{Error, ErrorKind, Result, Seek, SeekFrom};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -47,7 +47,7 @@ impl fmt::Display for Task {
          * `{:<50}`: a left-aligned string padded with 50 spaces.
          * `[{}]`: the date and time the task was created, inside brackets.
          */
-        write!(f, "{:<50} [{}]", self.text, created_at);
+        write!(f, "{:<50} [{}](UTC)", self.text, created_at)
     }
 }
 
@@ -77,11 +77,11 @@ fn collect_tasks(mut file: &File) -> Result<Vec<Task>> {
          * an empty vector (`Vec::new()`) is initialized as tasks.
          * This is used when the file is empty or the correct data has not yet been written.
          */
-        Err(e) if e.is_eof => Vec::new(),
+        Err(e) if e.is_eof() => Vec::new(),
         Err(e) => Err(e)?,
     };
     file.seek(SeekFrom::Start(0))?;
-    Ok(tasks);
+    Ok(tasks)
 }
 
 pub fn add_task(journal_path: PathBuf, task: Task) -> Result<()> {
@@ -103,7 +103,7 @@ pub fn add_task(journal_path: PathBuf, task: Task) -> Result<()> {
      *
      * See doc: https://doc.rust-lang.org/reference/expressions/operator-expr.html#:~:text=The%20question%20mark%20operator%20(%20%3F%20),%3E%20type%2C%20it%20propagates%20errors.
      */
-    let mut file = OpenOptions::new()
+    let file = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
@@ -115,13 +115,13 @@ pub fn add_task(journal_path: PathBuf, task: Task) -> Result<()> {
      * Write the modified task list back into the file.
      */
     tasks.push(task);
-    serde_json::to_write(file, &tasks)?;
+    serde_json::to_writer(file, &tasks)?;
 
     /*
      * `()` is called `unit`.
      * If no return type is specified for the function, it returns an empty tuple(`()`).
      */
-    Ok(());
+    Ok(())
 }
 
 pub fn complete_task(journal_path: PathBuf, task_position: usize) -> Result<()> {
@@ -130,7 +130,7 @@ pub fn complete_task(journal_path: PathBuf, task_position: usize) -> Result<()> 
         .write(true)
         .open(journal_path)?;
 
-    let tasks = collect_tasks(&file)?;
+    let mut tasks = collect_tasks(&file)?;
 
     if task_position == 0 || task_position > tasks.len() {
         return Err(Error::new(ErrorKind::InvalidInput, "Invalid Task ID"));
@@ -143,9 +143,9 @@ pub fn complete_task(journal_path: PathBuf, task_position: usize) -> Result<()> 
      * This procedure is used to empty a file before completely replacing its contents with new data.
      */
     file.set_len(0)?;
-    serde_json::to_write(file, &tasks)?;
+    serde_json::to_writer(file, &tasks)?;
 
-    Ok(());
+    Ok(())
 }
 
 pub fn list_tasks(journal_path: PathBuf) -> Result<()> {
@@ -162,5 +162,5 @@ pub fn list_tasks(journal_path: PathBuf) -> Result<()> {
         }
     }
 
-    Ok(());
+    Ok(())
 }
