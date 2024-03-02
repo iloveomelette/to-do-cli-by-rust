@@ -1,0 +1,8 @@
+#!/bin/bash -eu
+
+readonly RUST_VERSION=1.76.0
+
+docker run --rm \
+  -v $(pwd):/usr/src/app \
+  -w /usr/src/app \
+  rust:${RUST_VERSION}-bookworm cargo run
