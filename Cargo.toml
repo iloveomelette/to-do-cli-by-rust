@@ -8,3 +8,12 @@ edition = "2021"
 [dependencies]
 # Run `cargo search structopt`, then confirm latest version.
 structopt = "0.3.26"
+serde_json = "1.0.114"
+
+[dependencies.chrono]
+features = ["serde"] # We're also going to need the serde feature for the chrono crate, so we can serialize the DateTime field.
+version = "0.4.34"
+
+[dependencies.serde] # Add serde in its own section.
+features = ["derive"] # We'll need the derive feature.
+version = "1.0.197"
